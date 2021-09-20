@@ -27,7 +27,6 @@ for(let i = 0; i < data.length; i++){
     const paragraph = document.createElement('p')
     const price = document.createElement('p')
     const button = document.createElement('button')
-
 //Get content for children from json data
     
     header.innerText = data[i].name
@@ -45,6 +44,7 @@ for(let i = 0; i < data.length; i++){
     button.innerHTML = "Add to Cart"
     button.id = data[i].name
 
+
 //Add children to the div we created, which adds our content to our HTML
     newDiv.appendChild(header)
     newDiv.appendChild(img)
@@ -53,17 +53,30 @@ for(let i = 0; i < data.length; i++){
     newDiv.appendChild(button)
     itemsContainer.appendChild(newDiv)
 }
+
+//Button functionality
+const allItemsButton = Array.from(document.querySelectorAll("button"))
+console.log(allItemsButton)
+    allItemsButton.forEach(elt => elt.addEventListener('click', () => {
+        addItem(elt.getAttribute('id'), elt.getAttribute('data-price'))
+        showItems()
+    }))
+
+
+
 //Shopping cart tutorial
 const cart = []
 
-
+//------------------------------------------------
 
 function addItem(name, price){
+
     for(let i = 0; i < cart.length; i++){
         if(cart[i].name === name){
-            cart[i].quantiy +=1
+            cart[i].quantity +=1
             return
         }
+
     }
     const item = {
         name: name,
@@ -71,19 +84,72 @@ function addItem(name, price){
         quantity: 1
     }
     cart.push(item)
+    return
 }
 
+//------------------------------------------------
+
+//the Footer where we will display cart
+const shoppingCart = document.querySelector('footer')
+//header for cart shows how many items
+const header = document.createElement('h3')
+shoppingCart.prepend(header)
+//footer for cart where we display total price of cart
+const priceFooter = document.createElement('h3')
+shoppingCart.append(priceFooter)
+//item list where our cart items live
+const itemList = document.getElementById('item-list')
+itemList.innerHTML = '<li> Hello World</li>'
+
+//------------------------------------------------
 
 function showItems(){
-console.log(`You have ${getQuantity()} items in your cart`)
+    header.innerText = `You have ${getQuantity()} items in your cart`
 //total cost
-console.log(`Total cost: ${getTotalCost()}`)
+priceFooter.innerText = `Total cost: ${getTotalCost()}`
 
+    let itemString = ''
     for(let i = 0; i < cart.length; i++){
-        console.log(`- ${cart[i].name} $${cart[i].price} x ${cart[i].quantity}`)
+        itemString += 
+        `<li> 
+        ${cart[i].name} $${cart[i].price} x ${cart[i].quantity} 
+        <button class="remove" data-name="${cart[i].name}">Remove</button>
+        <button class="add" data-name="${cart[i].name}"> + </button>
+        <button class="minus" data-name="${cart[i].name}"> - </button>
+        <input class="update" type="number" min = "0" data-name="${cart[i].name}">
+        </li>`
+    }
+    itemList.innerHTML = itemString
+}
+
+//------------------------------------------------
+//Handle clicks on cart
+itemList.onclick = function(e){
+    const name = e.target.dataset.name
+    if(e.target && e.target.classList.contains('remove')){
+        removeItem(name) 
+    }
+    else if(e.target && e.target.classList.contains('add')){
+        addItem(name)
+    }
+    else if(e.target && e.target.classList.contains('minus')){
+        removeItem(name, 1)
+    }
+    showItems()
+}
+
+//------------------------------------------------
+
+//handle change events on cart input
+itemList.onchange = function(e){
+    if(e.target && e.target.classList.contains('update')){
+        const name = e.target.dataset.name
+        const quantity = parseInt(e.target.value)
+        updateCart(name, quantity)
     }
 }
 
+//------------------------------------------------
 
 function getQuantity(){
     let quantity = 0
@@ -93,10 +159,44 @@ function getQuantity(){
 return quantity
 }
 
+//------------------------------------------------
+
 function getTotalCost(){
     let cost = 0
     for(let i = 0; i < cart.length; i++){
         cost += cart[i].price*cart[i].quantity
     }
-    return cost.toFixed(2)   
+return cost.toFixed(2)   
+}
+
+//------------------------------------------------
+
+function removeItem(name, quantity = 0){
+    for(let i = 0; i < cart.length; i++){
+        if(name === cart[i].name){
+            if(quantity > 0){
+                cart[i].quantity -= quantity
+            }
+            if(cart[i].quantity < 1 || quantity === 0){
+                cart.splice(i, 1)
+            }
+            return
+        }
+    }
+}
+
+//------------------------------------------------
+
+function updateCart(name, quantity){
+    for(let i = 0; i < cart.length; i++){
+        if(cart[i].name === name){
+            if(quantity < 1){
+                removeItem(name)
+                return
+            }
+            cart[i].quantity = quantity
+            showItems()
+            return
+        }
+    }
 }
